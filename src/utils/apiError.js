@@ -1,12 +1,13 @@
-class ApiError extends Error {
-    constructor(statusCode,
-        message = "someyhing went wrong",
+class ApiError extends Error {             //using inheritance
+    constructor(
+        statusCode,
+        message = "something went wrong",
         errors = [],
         stack = ""
     ) {
-        super(message)
+        super(message)                  //This line calls the constructor of the superclass
         this.statusCode = statusCode
-        this.data = null
+        this.data = null                //The data property is typically used to attach additional contextual data to an error object
         this.message = message
         this.success = false
         this.errors = errors

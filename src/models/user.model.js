@@ -10,7 +10,7 @@ const userSchema = new Schema({
         unique: true,
         lowercase: true,
         trim: true,
-        index: true,
+        index: true,    //optimized searching field
     },
     email: {
         type: String,
@@ -18,7 +18,6 @@ const userSchema = new Schema({
         unique: true,
         lowercase: true,
         trim: true,
-        index: true,
     },
     fullName: {
         type: String,
@@ -56,6 +55,7 @@ userSchema.pre("save", async function(next) {
     next()
 })
 
+//custom methods
 userSchema.methods.isPasswordCorrect = async function(password) {
     return await bcrypt.compare(password, this.password)
 }
@@ -65,10 +65,11 @@ userSchema.methods.generateAccessToken = function() {
             _id: this._id,
             email: this.email,
             username: this.username,
-            fullName: this.fullname
+            fullName: this.fullName
         },
 
-        process.env.ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY },
+        process.env.ACCESS_TOKEN_SECRET, 
+        { expiresIn: process.env.ACCESS_TOKEN_EXPIRY },
     )
 }
 
@@ -77,7 +78,7 @@ userSchema.methods.generateRefreshToken = function() {
             _id: this._id,
         },
 
-        process.env.ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY },
+        process.env.ACCESS_TOKEN_SECRET, { expiresIn: process.env.REFRESH_TOKEN_SECRET },
 
     )
 }

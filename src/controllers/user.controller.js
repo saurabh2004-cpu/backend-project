@@ -27,12 +27,12 @@ const registerUser = asyncHandler(async(req, res) => {
     console.log("email :", email);
 
     //2.validation -not empty etc 
-    if ([fullName, email, username, password].some((field) => field ? .trim() === "")) {
+    if ([fullName, email, username, password].some((field) => field ?.trim() === "")) {
         throw new ApiError(400, "all fields are required")
     }
 
     //3.check if use already exist :username ,email
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{ username }, { email }]
     })
 
@@ -42,8 +42,8 @@ const registerUser = asyncHandler(async(req, res) => {
     }
 
     //4.upload them to cloudinary, avatar
-    const avatarLocalPath = req.files ? .avatar[0] ? .path;
-    const coverImageLocalPath = req.files ? .coverImage[0] ? .path;
+    const avatarLocalPath = req.files ?.avatar[0] ?.path;
+    const coverImageLocalPath = req.files ?.coverImage[0] ?.path;
 
     if (!avatar) {
         throw new ApiError(400, "avatar file is required")
@@ -61,7 +61,7 @@ const registerUser = asyncHandler(async(req, res) => {
     const user = await User.create({
         fullName,
         avatar: avatar.url,
-        coverImage: coverImage ? .url || "",
+        coverImage: coverImage ?.url || "",
         email,
         password,
         username: username.toLowerCase()

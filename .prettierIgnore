@@ -1,3 +1,7 @@
+///files wher e the pretties does not applies 
+
+
+
 *.env
 .env
 .env.*
@@ -5,3 +9,4 @@
 /.vscode 
 /node_modules
 .dist
+
