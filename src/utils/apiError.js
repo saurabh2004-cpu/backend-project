@@ -5,6 +5,8 @@ class ApiError extends Error {             //using inheritance
         errors = [],
         stack = ""
     ) {
+        //overwritting on error class
+
         super(message)                  //This line calls the constructor of the superclass
         this.statusCode = statusCode
         this.data = null                //The data property is typically used to attach additional contextual data to an error object
