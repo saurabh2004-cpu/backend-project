@@ -86,6 +86,7 @@ const updateVideoDetails = asyncHandler(async (req, res) => {
     }
     const oldVideoDetails=getVideoById()
 
+    
     if(!oldVideoDetails){
         throw new ApiError(400,"error while fetching  old video deatils")
     }
