@@ -1,4 +1,6 @@
 import mongoose,{Schema} from "mongoose";
+import mongoosePaginate from 'mongoose-paginate-v2';
+
 
 const subscriptionSchema=new Schema({
 
@@ -14,5 +16,6 @@ const subscriptionSchema=new Schema({
 
 },{timestamps:true})
 
+subscriptionSchema.plugin(mongoosePaginate);
 
-const Subscription=mongoose.model("Subscription",subscriptionSchema)
+export const Subscription=mongoose.model("Subscription",subscriptionSchema)
