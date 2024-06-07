@@ -10,5 +10,5 @@ subscriptionRouter.route("/toggle-subscription/:channelId").post(verifyJwt,toggl
 
 subscriptionRouter.route("/get-channel-subscribers/:channelId").get(verifyJwt,getUserChannelSubscribers)
 
-subscriptionRouter.route("/get-subscribed-channels/:subscriberId").get(verifyJwt,getSubscribedChannels)
+subscriptionRouter.route("/get-subscribed-channels").get(verifyJwt,getSubscribedChannels)
 export default subscriptionRouter

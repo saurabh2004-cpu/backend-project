@@ -6,16 +6,14 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 
 const getVideoComments = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
-    const { page = 1, limit = 10 } = req.query;
-
-
+    const { page = 1, limit = 100 } = req.query;
 
 
     const options = {
         page: parseInt(page, 10),
         limit: parseInt(limit, 10),
         populate: [
-            { path: 'owner', select: 'username avatar' } // Populate owner's username and avatar
+            { path: 'owner', select: 'username avatar' } 
         ]
     };
 
@@ -26,7 +24,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
     );
 
     if (!comments || comments.docs.length === 0) {
-        throw new ApiError(400, "Error while getting video comments or no comments found!");
+        throw new ApiResponse(404,null, "Error while getting video comments or no comments found!");
     }
 
     return res
@@ -98,7 +96,7 @@ const deleteComment = asyncHandler(async (req, res) => {
         throw new ApiError(400,"error commentId!")
     }
 
-    const deletedComment=await Comment.findOneAndDelete(commentId)
+    const deletedComment=await Comment.findByIdAndDelete(commentId)
 
     if(!deletedComment){
         throw new ApiError(400,"error while deleting comment !")
@@ -106,7 +104,7 @@ const deleteComment = asyncHandler(async (req, res) => {
 
     return res
     .status(200)
-    .json(new ApiResponse(200,deletedComment,"comment sucessfully deleted "))
+    .json(new ApiResponse(200,{},"comment sucessfully deleted "))
 })
 
 

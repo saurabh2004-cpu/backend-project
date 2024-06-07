@@ -43,6 +43,18 @@ const userSchema = new Schema({
     refreshToken: {
         type: String,
     },
+    watchLater:[{
+        type: Schema.Types.ObjectId,
+        ref: "Video",
+    }],
+    playNext:{
+        type: Schema.Types.ObjectId,
+        ref: "Video",
+    },
+    // Playlist:[{
+    //     type: Schema.Types.ObjectId,
+    //     ref: "Video",
+    // }]
 
 }, { timestamps: true })
 

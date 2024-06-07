@@ -3,20 +3,22 @@ import {PlayList} from "../models/playlist.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
-import { User } from "../models/user.model.js"
+import {uploadOnCloudinary} from "../utils/cloudinary.js"
 
 
 const createPlaylist = asyncHandler(async (req, res) => {
-    const { title, description } = req.body;
+    const { name, description } = req.body;
 
     
-    if (!title || !description) {
+    if (!name || !description) {
         throw new ApiError(400, "Title and description are required!");
     }
 
     const playList = await PlayList.create({
-       name: title,
+        name: name,
         description: description,
+        owner:req.user._id,
+        // thumbnail:thumbnailFile?.url
     });
 
 
@@ -29,7 +31,13 @@ const createPlaylist = asyncHandler(async (req, res) => {
 
 const getUserPlaylists = asyncHandler(async (req, res) => {
 
-    const playlists = await PlayList.find();
+    const {channelId}=req.params
+
+    const playlists = await PlayList.find({owner:channelId})
+    .populate ([
+        { path: 'owner', select: 'username avatar coverImage' },
+        {path:'videos'}
+    ])
 
     if (!playlists.length) {
         return res
@@ -43,31 +51,43 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
 });
 
 
+//this cant fetched first video that is [0]th position
 const getPlaylistById = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
     
     const playList=await PlayList.findById(playlistId)
+    .populate ( [
+        { 
+            // path: 'videos', select: 'title description thumbnail owner ',
+            path: 'owner', 
+        },
+        {
+            path:'videos'
+        }
+    ])
 
     return res
     .status(200)
     .json(new ApiResponse(200,playList,"playlist fetched"))
 })
 
-//update this
+
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
     const { playlistId, videoId } = req.params;
-    const {userId}=req.user._id
 
     const playlist = await PlayList.findByIdAndUpdate(
         playlistId,
         { 
             $addToSet: { videos: videoId },              // $addToSet ensures no duplicates
-            $addToSet: { owner: userId },              // $addToSet ensures no duplicates
         },  
         { new: true }                                   
     )
     .populate('videos')                                // Populate the 'videos' field with video documents
-    .populate('owner', 'username fullName avatar');    // Populate the 'owner' field with specific user fields
+    .populate ( [
+        { 
+            path: 'owner', 
+            select: 'username fullName avatar coverImage'
+        }])
 
     if (!playlist) {
         throw new ApiError(400, "Error while adding video to the playlist");
@@ -75,7 +95,7 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, playlist, "Video added to the playlist successfully"));
+        .json(new ApiResponse(200, playlist.videos, "Video added to the playlist successfully"));
 });
 
 
@@ -83,34 +103,38 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     const { playlistId, videoId } = req.params;
     
     
-    const playlist = await PlayList.findByIdAndUpdate(
+    const deletedVideo = await PlayList.findByIdAndUpdate(
         playlistId,
-        { $pull: { 
+        { 
+            $pull: { 
             videos: videoId                 // $pull removes the video ID from the 'videos' array
             } 
         },  
         { new: true }  
-    ).populate('videos')  
-     .populate('owner', 'username fullName avatar');  
+    )
 
-    if (!playlist) {
+    if (!deletedVideo) {
         throw new ApiError(400, "Error while removing the video from the playlist");
     }
 
     return res
         .status(200)
-        .json(new ApiResponse(200, playlist, "Video successfully removed from playlist"));
+        .json(new ApiResponse(200, {}, "Video successfully removed from playlist"));
 });
 
 
 const deletePlaylist = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
    
-    const playList=await PlayList.findOneAndDelete(playlistId)
+    const deletedPlayList=await PlayList.findOneAndDelete(playlistId)
+
+    if (!deletePlaylist) {
+        throw new ApiError(400, "Error while deleting the playlist");
+    }
 
     return res
     .status(200)
-    .json(new ApiResponse(200,playList,"playlist deleted sucessfully"))
+    .json(new ApiResponse(200,deletedPlayList.name,"playlist deleted sucessfully"))
 })
 
 
@@ -122,7 +146,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Title and description are required!");
     }
 
-    const playList = await PlayList.findOneAndUpdate(
+    const playList = await PlayList.findByIdAndUpdate(
         playlistId,
         {
             name: title,

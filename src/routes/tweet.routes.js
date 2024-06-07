@@ -3,7 +3,7 @@ import { verifyJwt } from "../middlewares/auth.middleware.js";
 
 import { 
     deleteTweet, 
-    getTweet, 
+    getTweets, 
     postTweet, 
     updateTweet 
 
@@ -12,9 +12,9 @@ import {
 const tweetRouter=Router()
 
 tweetRouter.route("/post-tweet").post(verifyJwt,postTweet)
-tweetRouter.route("/get-tweet/:tweetId").get(verifyJwt,getTweet)
-tweetRouter.route("/update-tweet").patch(verifyJwt,updateTweet)
-tweetRouter.route("/delete-tweet").post(verifyJwt,deleteTweet)
+tweetRouter.route("/get-tweets/:channelId").get(verifyJwt,getTweets)
+tweetRouter.route("/update-tweet/:tweetId").patch(verifyJwt,updateTweet)
+tweetRouter.route("/delete-tweet/:tweetId").post(verifyJwt,deleteTweet)
 
 
 export default tweetRouter

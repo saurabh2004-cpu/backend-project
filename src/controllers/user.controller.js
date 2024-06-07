@@ -6,7 +6,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/apiResponse.js"
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose"
-
+import {Video} from "../models/video.model.js"
 
 const generateAccessAndRefreshTokens=async(userId)=>{
     try {
@@ -100,7 +100,7 @@ const registerUser = asyncHandler(async(req, res) => {
     }
 
     // 9.return response 
-    return res.status(201).json(
+    return res.status(200).json(
         new ApiResponse(200, createdUser, "User registered successfully")
     )
 
@@ -197,7 +197,7 @@ const logoutUser = asyncHandler(async(req,res)=>{
 })
 
 
-//refres hAccess token
+//refres Access token
 const refreshAccessToken = asyncHandler(async(req,res)=>{
 
     try {
@@ -283,9 +283,9 @@ const getCurrentUser = asyncHandler(async(req,res)=>{
 //update account details 
 const updateAccountDetails=asyncHandler(async(req,res)=>{
 
-    const {fullName,email}=req.body
+    const {fullName,username}=req.body
 
-    if(!fullName || !email){
+    if(!fullName || !username){
         throw new ApiError(400,"all field are required")
     }
 
@@ -293,8 +293,8 @@ const updateAccountDetails=asyncHandler(async(req,res)=>{
         req.user?._id,
         {
             $set:{
-                fullName,
-                email:email
+                fullName:fullName,
+                username:username
             }
         },
         {
@@ -320,7 +320,7 @@ const updateUserAvatar=asyncHandler(async(req,res)=>{
 
     const avatar=await uploadOnCloudinary(avatarlocalPath)
 
-    if(!avatar.url){
+    if(!avatar){
         throw new ApiError(400,"Error while uploading avatar")
     }
 
@@ -354,7 +354,7 @@ const updateUserCoverImage=asyncHandler(async(req,res)=>{
 
     const coverImage = await uploadOnCloudinary(coverImagelocalPath)
 
-    if(!coverImage.url){
+    if(!coverImage){
         throw new ApiError(400,"Error while uploading coverImage")
     }
 
@@ -378,16 +378,17 @@ const updateUserCoverImage=asyncHandler(async(req,res)=>{
 
 
 const getUserChannelProfile = asyncHandler(async(req, res) => {
-    const {username} = req.params
+    // const {username} = req.params
+    const {channelId} = req.params
 
-    if (!username?.trim()) {
-        throw new ApiError(400, "username is missing")
+    if (!channelId) {
+        throw new ApiError(400, "channelId is missing")
     }
 
     const channel = await User.aggregate([
         {
             $match: {
-                username: username?.toLowerCase()
+                _id: new mongoose.Types.ObjectId(channelId)
             }
         },
         {
@@ -449,7 +450,27 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
     )
 })
 
+const createWatchHistory=asyncHandler(async(req,res)=>{
+const { videoId } = req.params;
+  const userId = req.user._id;
 
+  try {
+    const user = await User.findById(userId);
+
+    const history=user.watchHistory.push(videoId);
+    await user.save();
+
+    if(!history){
+        new ApiError(400,"error while adding video to history")
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200,null,"video added to history "));
+  } catch (error) {
+    throw new ApiError(400,"Error while adding video to history ")
+  }
+})
 
 const getWatchHistory = asyncHandler(async(req, res) => {
     const user = await User.aggregate([
@@ -505,9 +526,135 @@ const getWatchHistory = asyncHandler(async(req, res) => {
     )
 })
 
+const AddToWatchLater=asyncHandler(async(req,res)=>{
+    const {videoId}= req.params
+    const userId=req.user._id
+    try {
+        const video=await Video.findById(videoId)
+
+        if(!video){
+            throw new ApiError(400,"Video Not Found")
+        }
+
+        const user=await User.findById(userId)
+
+        if(!user){
+            throw new ApiError(400,"user Not Found")
+        }
 
 
+        if (user.watchLater.includes(videoId)) {
+            throw new ApiResponse(204, "Video already in watch later list");
+          }
+      
 
+        const watchLater = user.watchLater.push(videoId)
+        await user.save()
+
+        if(!watchLater){
+            throw new ApiError(400,"error while adding video to watch later")
+        }
+
+        return res
+        .status(200)
+        .json(new ApiResponse(200,video,"Video added To watch Later "))
+
+    } catch (error) {
+        throw new ApiError(400,"Error:video not added to watch later")
+    }
+})
+
+const getWatchLaterVideos = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+  
+    try {
+      const user = await User.findById(userId).populate('watchLater');
+      
+      if (!user) {
+        throw new ApiError(400, "User Not Found");
+      }
+  
+      return res.status(200).json(new ApiResponse(200, user.watchLater, "Watch Later videos fetched successfully"));
+
+    } catch (error) {
+      return res.status(400).json(new ApiError(400, "Error while fetching watch later videos"));
+    }
+});
+
+const removeFromWatchLater = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const { videoId } = req.params;
+
+    console.log("Id",videoId)
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    const video = user.watchLater.pull(videoId);
+    await user.save();
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200,video, "Video removed from watch later list"));
+});
+
+const AddToPlayNext = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+    const userId = req.user._id;
+
+    console.log(videoId)
+
+    try {
+        const video = await Video.findById(videoId);
+        if (!video) {
+            throw new ApiError(400, "Video Not Found");
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new ApiError(400, "User Not Found");
+        }
+
+        if (!user.playNext) {
+            user.playNext = [];
+        }
+
+        if (user.playNext.includes(videoId)) {
+            throw new ApiError(400, "Video already in playNext list");
+        }
+
+        user.playNext.push(videoId);
+        await user.save();
+
+        return res.status(200).json(new ApiResponse(200, user.playNext, "Video added to playNext list"));
+    } catch (error) {
+        throw new ApiError(400, `Error: ${error.message}`);
+    }
+});
+
+
+const getPlayNextVideo=asyncHandler(async(req,res)=>{
+    const userId=req.user._id
+
+    try {
+      
+        const video=await User.findById(userId).populate('playNext')
+
+        if(!video){
+            throw new ApiResponse("No video to play next")
+        }
+
+        return res
+        .status(200)
+        .json(new ApiResponse(200,video,"play next video fetched "))
+        
+    } catch (error) {
+        throw new ApiError(400,"Error while fetching next video")
+    }
+})
 
 
 
@@ -523,6 +670,13 @@ export {
     updateUserCoverImage,
     getUserChannelProfile,
     getWatchHistory,
+    createWatchHistory,
+    AddToWatchLater,
+    getWatchLaterVideos,
+    AddToPlayNext,      //not working
+    getPlayNextVideo,  //not working
+    removeFromWatchLater
+
 
 }
 

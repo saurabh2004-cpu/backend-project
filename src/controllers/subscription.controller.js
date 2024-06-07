@@ -4,7 +4,7 @@ import { Subscription } from "../models/subscription.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
-
+import {Video} from "../models/video.model.js"
 
 const toggleSubscription = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
@@ -95,8 +95,9 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
-    const { subscriberId } = req.params;
+    const  subscriberId  = req.user._id;
 
+    // console.log(subscriberId)
 
     if (!mongoose.Types.ObjectId.isValid(subscriberId)) {
         throw new ApiError(400, "Invalid Subscriber ID");
@@ -126,13 +127,16 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
                 username: 1,
                 avatar: 1,
                 email: 1,
-                coverImage: 1
+                coverImage: 1,
+                subscribersCount:1
             }
         }
     ]);
 
     return res.status(200).json(new ApiResponse(200, subscribedChannels, "Subscribed channels fetched successfully"));
 });
+
+
 
 export {
     toggleSubscription,

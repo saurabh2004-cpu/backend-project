@@ -35,7 +35,12 @@ const videoSchema = new Schema({
     owner: {
         type: Schema.Types.ObjectId,
         ref: "User",
+    },
+    catagory:{
+        type:String,
+        
     }
+    
 
 }, { timestamps: true })
 

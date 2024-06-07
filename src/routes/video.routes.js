@@ -10,6 +10,10 @@ import {
     updateVideoThumbnail,
     getAllVideos,
     togglePublishStatus,
+    getAllUsersVideos,
+    getVideosByCatagory,
+    incrementVideoViews,
+    isLiked
     
 } from "../controllers/video.controller.js";
 
@@ -34,11 +38,18 @@ videoRouter.route("/upload-video")
     publishAVideo
 )
 
-videoRouter.route("/get-video").get(verifyJwt,getVideoById)
-videoRouter.route("/update-video-details").patch(verifyJwt,updateVideoDetails)
-videoRouter.route("/update-video-thumbnail").patch(verifyJwt,upload.single("thumbnail"),updateVideoThumbnail)
-videoRouter.route("/delete-video").post(verifyJwt,deleteVideo)
-videoRouter.route("/all-videos").get(verifyJwt, getAllVideos);
-videoRouter.route("/toggle-status").post(verifyJwt, togglePublishStatus);
+videoRouter.route("/get-video/:videoId").get(verifyJwt,getVideoById)
+videoRouter.route("/update-video-details/:videoId").patch(verifyJwt,updateVideoDetails)
+videoRouter.route("/update-video-thumbnail/:videoId").patch(verifyJwt,upload.single("thumbnail"),updateVideoThumbnail)
+videoRouter.route("/delete-video/:videoId").post(verifyJwt,deleteVideo)
+videoRouter.route("/get-channel-all-videos/:channelId").get(verifyJwt, getAllVideos);
+videoRouter.route("/all-users-videos").get(verifyJwt, getAllUsersVideos);
+videoRouter.route("/toggle-status/:videoId").post(verifyJwt, togglePublishStatus);
+
+videoRouter.route("/increment-video-views/:videoId").post(verifyJwt,incrementVideoViews);
+videoRouter.route("/get-videos-by-catagory/:category").get(verifyJwt, getVideosByCatagory);
+
+
+videoRouter.route("/is-liked/:videoId").get(verifyJwt, isLiked);
 
 export default videoRouter

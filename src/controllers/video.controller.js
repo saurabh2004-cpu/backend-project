@@ -3,10 +3,14 @@ import {ApiError} from "../utils/apiError.js"
 import {ApiResponse} from "../utils/apiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
+import { Like } from "../models/like.model.js"
+import mongoose from "mongoose"
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, query, sortBy = 'createdAt', sortType = 'desc', userId } = req.query;
+    const { page = 1, limit = 30, query, sortBy = 'createdAt', sortType = 'desc',  } = req.query;
+
+    const{channelId}=req.params
 
     // Construct filter object
     const filter = {};
@@ -16,8 +20,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
             { description: { $regex: query, $options: 'i' } }
         ];
     }
-    if (userId) {
-        filter.owner = userId;
+    if (channelId) {
+        filter.owner = channelId;
     }
 
     // Construct sort object
@@ -44,8 +48,9 @@ const getAllVideos = asyncHandler(async (req, res) => {
 });
 
 const publishAVideo = asyncHandler(async (req, res) => {
-    const { title, description } = req.body;
+    const { title, description,catagory=all } = req.body;
 
+    // console.log(title,description)
    
     if (!title || !description) {
         throw new ApiError(400, "Title and description are required!");
@@ -66,9 +71,12 @@ const publishAVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Video file and thumbnail are required!");
     }
 
+   
+
     const video = await Video.create({
         title: title,
         description: description,
+        catagory:catagory,
         videoFile: videoFile.url,
         thumbnail: thumbnailFile.url,
         duration: videoFile?.duration || 10,
@@ -84,21 +92,46 @@ const publishAVideo = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, video, "Video uploaded successfully!"));
 });
 
+const getVideosByCatagory=asyncHandler(async(req,res)=>{
+    const {category}=req.params
 
-const getVideoById = asyncHandler(async (req, res) => {
-    const { videoId } = req.params
-   
+    const videos=await Video.find({
+        catagory:category
+    }).populate('owner')
 
-    const video =await Video.findOne(videoId)
 
-    if(!video){
-        throw new ApiError(401,"video not found !")
+    if(!videos){
+        throw new ApiResponse(201,null,"No video found with selected catagory")
     }
 
     return res
     .status(200)
-    .json(new ApiResponse(200,video,"video fetched successfully "))
+    .json(new ApiResponse(200,videos,"Videos fetched with selected catagory"))
 })
+
+const getVideoById = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    const userId=req.user._id
+   
+
+    const video =await Video.findById(videoId).populate ( [
+        { path: 'owner'} 
+    ])
+
+    if(!video){
+        throw new ApiError(401,"video not found !")
+    }
+    
+    const existingLike = await Like.findOne({
+        video: videoId,
+        likedBy: userId
+    });
+
+    const isLiked = existingLike ? true : false;
+
+    return res.status(200).json(new ApiResponse(200, { video, isLiked }, "Video fetched successfully"));
+});
+
 
 const updateVideoDetails=asyncHandler(async(req,res)=>{
     const { videoId } = req.params;
@@ -108,7 +141,7 @@ const updateVideoDetails=asyncHandler(async(req,res)=>{
         throw new ApiError(400,"all field are required")
     }
 
-    const video = await Video.findOneAndUpdate(
+    const video = await Video.findByIdAndUpdate(
         videoId,
         {
             $set:{
@@ -165,35 +198,132 @@ const updateVideoThumbnail=asyncHandler(async(req,res)=>{
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     
+     
 
-    const deletedVideo = await Video.findOneAndDelete(videoId)
+    const deletedVideo = await Video.findByIdAndDelete(videoId)
 
+    if(!deletedVideo){
+        throw new ApiError(400,"error while deleting video")
+    }
     return res
     .status(200)
     .json(new ApiResponse(200,deletedVideo.title,"Video deleted successfully "))
 
 })
 
+const getAllUsersVideos = asyncHandler(async (req, res) => {
+    try {
+        const allVideos = await Video.find().populate('owner', 'username avatar');
+
+        if (!allVideos) {
+            throw new ApiError(400, "Error while fetching all videos");
+        }
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, allVideos, "Videos successfully fetched"));
+    } catch (error) {
+        console.error(error);
+        return res
+            .status(500)
+            .json(new ApiResponse(500, null, "Internal Server Error"));
+    }
+});
+
 
 //update this func :todo
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const {videoId} = req.params;
-
-    const video = await Video.findOne(videoId);
-
+    
+    const video = await Video.findById(videoId);
+    
     if (!video) {
         throw new ApiError(404, "Video not found");
     }
-
+    
     
     video.isPublished = !video.isPublished;
-
+    
     await video.save();
-
+    
     return res
-        .status(200)
-        .json(new ApiResponse(200, video, "Video publish status updated successfully"));
+    .status(200)
+    .json(new ApiResponse(200, video, "Video publish status updated successfully"));
 });
+
+
+const incrementVideoViews=asyncHandler(async(req,res)=>{
+    const { videoId } = req.params;
+    try {
+        const video = await Video.findByIdAndUpdate(
+            videoId,
+            { $inc: { views: 1 } },
+            { new: true }
+        );
+        if (!video) {
+            return res.status(404).json({ message: 'Video not found' });
+        }
+
+        return res
+        .status(200)
+        .json(new ApiResponse(200,video,"video view incremented"))
+    } catch (error) {
+       throw new ApiError(400,"Error while incrementing")
+    }
+})
+
+
+////////////////////////////////////////////////////////////////
+const isLiked = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+    const userId = req.user._id;
+
+    const like = await Like.aggregate([
+        {
+            $match: {
+                video: new mongoose.Types.ObjectId(videoId)
+            }
+        },
+        {
+            $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "video",
+                as: "likes"
+            }
+        },
+        {
+            $addFields: {
+                likesCount: {
+                    $size: "$likes"
+                },
+                isLiked: {
+                    $cond: {
+                        if: { $in: [userId, "$likes.likedBy"] },
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                likesCount: 1,
+                isLiked: 1
+            }
+        }
+    ]);
+
+    if (!like?.length) {
+        throw new ApiError(404, "Like does not exist");
+    }
+
+    return res.status(200).json(new ApiResponse(200, like[0], "User like fetched successfully"));
+});
+
+
+
+
 
 export {
     getAllVideos,
@@ -202,5 +332,9 @@ export {
     updateVideoDetails,
     updateVideoThumbnail,
     deleteVideo,
-    togglePublishStatus
+    togglePublishStatus,
+    getAllUsersVideos,
+    incrementVideoViews,
+    getVideosByCatagory,
+    isLiked
 }

@@ -14,7 +14,8 @@ const postTweet=asyncHandler(async(req,res)=>{
 
     const tweet = await Tweet.create(
         {
-            content:content
+            content:content,
+            owner:req.user._id
         }
     )
     
@@ -35,7 +36,7 @@ const deleteTweet= asyncHandler (async(req,res)=>{
 
     return res
     .status(200)
-    .json(new ApiResponse(200,deletedTweet,"tweet deleted sucessfully"))
+    .json(new ApiResponse(200,deletedTweet.content,"tweet deleted sucessfully"))
 })
 
 const updateTweet=asyncHandler(async(req,res)=>{
@@ -46,7 +47,7 @@ const updateTweet=asyncHandler(async(req,res)=>{
         throw new ApiError(400,"content is required")
     }
 
-    const tweet = await Tweet.findOneAndUpdate(
+    const tweet = await Tweet.findByIdAndUpdate(
         tweetId,
         {
             $set:{
@@ -67,51 +68,22 @@ const updateTweet=asyncHandler(async(req,res)=>{
     .json(new ApiResponse(200,tweet,"tweet updated sucessfully"))
 })
 
-const getTweet = asyncHandler(async (req, res) => {
-    const { tweetId } = req.params;
+const getTweets = asyncHandler(async (req, res) => {
+    const { channelId } = req.params;
+
+    if (!channelId) {
+        throw new ApiError(400, "Channel ID is required!");
+    }
+
+   
+    const tweets = await Tweet.find({ owner: channelId }).populate( [{ path: 'owner', select: 'username avatar' } 
+    ]);
 
     
-    if (!mongoose.Types.ObjectId.isValid(tweetId)) {
-        throw new ApiError(400, "Invalid Tweet ID");
-    }
-    const tweetObjectId = new mongoose.Types.ObjectId(tweetId);
-
-   
-    const tweet = await Tweet.aggregate([
-        {
-            $match: {
-                _id: tweetObjectId
-            }
-        },
-        {
-            $lookup: {
-                from: "users",
-                localField: "_id", 
-                foreignField: "username", 
-                as: "tweetOwner" // Rename the result to tweetOwner
-            }
-        },
-        {
-            $addFields: {
-                owner: { $arrayElemAt: ["$tweetOwner", 0] } 
-            }
-        },
-        {
-            $project: {
-                content: 1,
-                owner: 1
-            }
-        }
-    ]);
-   
-   
-    if (tweet.length === 0) {
-        throw new ApiError(404, "Tweet not found");
-    }
 
     return res
         .status(200)
-        .json(new ApiResponse(200, tweet[0], "Tweet fetched successfully"));
+        .json(new ApiResponse(200, tweets, "Tweets fetched successfully"));
 });
 
 
@@ -120,5 +92,5 @@ export{
     postTweet,
     deleteTweet,
     updateTweet,
-    getTweet,
+    getTweets,
 }
