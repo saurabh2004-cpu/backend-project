@@ -7,7 +7,6 @@ import ApiResponse from "../utils/apiResponse.js"
 import { ApiError } from "../utils/apiError.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 import {Video} from "../models/video.model.js"
-import { ApiError } from "../utils/apiError.js"
 
 const toggleSubscription = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
