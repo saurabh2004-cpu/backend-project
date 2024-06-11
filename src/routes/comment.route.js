@@ -14,4 +14,4 @@ commentRouter.route("/update-comment/:commentId").post(verifyJwt,updateComment)
 commentRouter.route("/delete-comment/:commentId").post(verifyJwt,deleteComment)
 commentRouter.route("/get-video-comments/:videoId").get(verifyJwt,getVideoComments)
 
-export default commentRouter
+export default commentRouter  

@@ -48,7 +48,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
 });
 
 const publishAVideo = asyncHandler(async (req, res) => {
-    const { title, description,catagory=all } = req.body;
+    const { title, description,catagory='all' } = req.body;
 
     // console.log(title,description)
    
@@ -111,7 +111,6 @@ const getVideosByCatagory=asyncHandler(async(req,res)=>{
 
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params
-    const userId=req.user._id
    
 
     const video =await Video.findById(videoId).populate ( [
@@ -122,14 +121,14 @@ const getVideoById = asyncHandler(async (req, res) => {
         throw new ApiError(401,"video not found !")
     }
     
-    const existingLike = await Like.findOne({
-        video: videoId,
-        likedBy: userId
-    });
+    // const existingLike = await Like.findOne({
+    //     video: videoId,
+    //     likedBy: userId
+    // });
 
-    const isLiked = existingLike ? true : false;
+    // const isLiked = existingLike ? true : false;
 
-    return res.status(200).json(new ApiResponse(200, { video, isLiked }, "Video fetched successfully"));
+    return res.status(200).json(new ApiResponse(200, { video }, "Video fetched successfully"));
 });
 
 
@@ -315,7 +314,7 @@ const isLiked = asyncHandler(async (req, res) => {
     ]);
 
     if (!like?.length) {
-        throw new ApiError(404, "Like does not exist");
+        throw new ApiResponse(204,null ,"Like does not exist");
     }
 
     return res.status(200).json(new ApiResponse(200, like[0], "User like fetched successfully"));
