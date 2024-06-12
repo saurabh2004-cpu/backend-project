@@ -3,7 +3,7 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 
 const app = express()
-const allowedOrigins = ['https://youtubeclone-axpb.vercel.app'];
+const allowedOrigins = 'https://youtubeclone-axpb.vercel.app';
 
 app.use(cors({
     origin: allowedOrigins,
