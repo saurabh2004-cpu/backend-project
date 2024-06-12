@@ -42,7 +42,7 @@ videoRouter.route("/get-video/:videoId").get(getVideoById)
 videoRouter.route("/update-video-details/:videoId").patch(verifyJwt,updateVideoDetails)
 videoRouter.route("/update-video-thumbnail/:videoId").patch(verifyJwt,upload.single("thumbnail"),updateVideoThumbnail)
 videoRouter.route("/delete-video/:videoId").post(verifyJwt,deleteVideo)
-videoRouter.route("/get-channel-all-videos/:channelId").get(verifyJwt, getAllVideos);
+videoRouter.route("/get-channel-all-videos/:channelId").get( getAllVideos);
 videoRouter.route("/all-users-videos").get( getAllUsersVideos);
 videoRouter.route("/toggle-status/:videoId").post(verifyJwt, togglePublishStatus);
 
