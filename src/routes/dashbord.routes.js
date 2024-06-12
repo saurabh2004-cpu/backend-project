@@ -7,7 +7,7 @@ const dashBordRouter=Router()
 
 dashBordRouter.route("/get-channel-videos/:channelId").get(verifyJwt,getChannelVideos)
 
-dashBordRouter.route("/get-channel-stats/:channelId").get(verifyJwt,getChannelStats)
+dashBordRouter.route("/get-channel-stats/:channelId").get(getChannelStats)
 
 dashBordRouter.route("/get-health-checkup").get(verifyJwt,healthcheck)
 
