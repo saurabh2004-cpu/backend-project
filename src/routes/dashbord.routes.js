@@ -5,7 +5,7 @@ import { healthcheck } from "../controllers/healthCheckUp.controller.js";
 
 const dashBordRouter=Router()
 
-dashBordRouter.route("/get-channel-videos/:channelId").get(verifyJwt,getChannelVideos)
+dashBordRouter.route("/get-channel-videos/:channelId").get(getChannelVideos)
 
 dashBordRouter.route("/get-channel-stats/:channelId").get(getChannelStats)
 
