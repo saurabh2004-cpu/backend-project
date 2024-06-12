@@ -39,36 +39,39 @@ const deleteTweet= asyncHandler (async(req,res)=>{
     .json(new ApiResponse(200,deletedTweet.content,"tweet deleted sucessfully"))
 })
 
-const updateTweet=asyncHandler(async(req,res)=>{
+const updateTweet = asyncHandler(async (req, res) => {
     const { tweetId } = req.params;
-    const {content}=req.body
+    const { content } = req.body;
 
-    
+    if (!tweetId) {
+        throw new ApiError(400, "tweetId is required");
+    }
 
-    if(!content && !tweetId){
-        throw new ApiError(400,"content is required")
+    if (!content) {
+        throw new ApiError(400, "content is required");
     }
 
     const tweet = await Tweet.findByIdAndUpdate(
         tweetId,
         {
-            $set:{
-                content:content
+            $set: {
+                content: content
             }
         },
         {
-            new:true
+            new: true
         }
-    )
+    );
 
-    if(!tweet){
-        throw new ApiError(400,"error while updating tweet")
+    if (!tweet) {
+        throw new ApiError(404, "Tweet not found");
     }
 
     return res
-    .status(200)
-    .json(new ApiResponse(200,tweet,"tweet updated sucessfully"))
-})
+        .status(200)
+        .json(new ApiResponse(200, tweet, "Tweet updated successfully"));
+});
+
 
 const getTweets = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
