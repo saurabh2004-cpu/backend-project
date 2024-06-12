@@ -12,7 +12,7 @@ import {
 const tweetRouter=Router()
 
 tweetRouter.route("/post-tweet").post(verifyJwt,postTweet)
-tweetRouter.route("/get-tweets/:channelId").get(verifyJwt,getTweets)
+tweetRouter.route("/get-tweets/:channelId").get(getTweets)
 tweetRouter.route("/update-tweet/:tweetId").patch(verifyJwt,updateTweet)
 tweetRouter.route("/delete-tweet/:tweetId").post(verifyJwt,deleteTweet)
 

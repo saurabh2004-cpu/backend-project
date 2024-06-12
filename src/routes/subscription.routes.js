@@ -8,7 +8,7 @@ const subscriptionRouter=Router()
 
 subscriptionRouter.route("/toggle-subscription/:channelId").post(verifyJwt,toggleSubscription)
 
-subscriptionRouter.route("/get-channel-subscribers/:channelId").get(verifyJwt,getUserChannelSubscribers)
+subscriptionRouter.route("/get-channel-subscribers/:channelId").get(getUserChannelSubscribers)
 
 subscriptionRouter.route("/get-subscribed-channels").get(verifyJwt,getSubscribedChannels)
 export default subscriptionRouter

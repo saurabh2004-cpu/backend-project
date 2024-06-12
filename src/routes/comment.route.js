@@ -12,6 +12,6 @@ const commentRouter=Router()
 commentRouter.route("/add-comment/:videoId").post(verifyJwt,addComment)
 commentRouter.route("/update-comment/:commentId").post(verifyJwt,updateComment)
 commentRouter.route("/delete-comment/:commentId").post(verifyJwt,deleteComment)
-commentRouter.route("/get-video-comments/:videoId").get(verifyJwt,getVideoComments)
+commentRouter.route("/get-video-comments/:videoId").get(getVideoComments)
 
 export default commentRouter  
