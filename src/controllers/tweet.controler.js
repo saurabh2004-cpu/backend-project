@@ -43,6 +43,8 @@ const updateTweet=asyncHandler(async(req,res)=>{
     const { tweetId } = req.params;
     const {content}=req.body
 
+    console.log("id= and content= ",tweetId,content)
+
     if(!content){
         throw new ApiError(400,"content is required")
     }
