@@ -52,25 +52,26 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
 
 
 //this cant fetched first video that is [0]th position
-const getPlaylistById = asyncHandler(async (req, res) => {
-    const {playlistId} = req.params
+export const getPlaylistById = asyncHandler(async (req, res) => {
+    const { playlistId } = req.params;
     
-    const playList=await PlayList.findById(playlistId)
-    .populate ( [
-        { 
-            // path: 'videos', select: 'title description thumbnail owner ',
-            path: 'owner', 
-        },
-        {
-            path:'videos'
+    try {
+        const playList = await PlayList.findById(playlistId)
+            .populate([
+                { path: 'owner', select: 'username' },
+                { path: 'videos', select: 'title description thumbnail' }
+            ]);
+
+        if (!playList) {
+            return res.status(404).json(new ApiResponse(404, null, "Playlist not found"));
         }
-    ])
 
-    return res
-    .status(200)
-    .json(new ApiResponse(200,playList,"playlist fetched"))
-})
-
+        return res.status(200).json(new ApiResponse(200, playList, "Playlist fetched"));
+    } catch (error) {
+        console.error('Error fetching playlist:', error);
+        return res.status(500).json(new ApiResponse(500, null, "Server error"));
+    }
+});
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
     const { playlistId, videoId } = req.params;
