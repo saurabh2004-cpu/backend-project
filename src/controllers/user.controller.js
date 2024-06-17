@@ -393,42 +393,58 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     const channel = await User.aggregate([
         {
             $match: {
-                _id: new mongoose.Types.ObjectId(channelId)
-            }
-        },
-        {
+              _id: {
+                $oid: "66655865e6a644f83de3f87d",
+              },
+            },
+          },
+          {
             $lookup: {
-                from: "subscriptions",
-                localField: "_id",
-                foreignField: "channel",
-                as: "subscribers"
-            }
-        },
-        {
+              from: "subscriptions",
+              localField: "_id",
+              foreignField: "channel",
+              as: "subscribers",
+            },
+          },
+          {
             $lookup: {
-                from: "subscriptions",
-                let: { channel_id: "$_id" },
-                pipeline: [
-                    {
-                        $match: {
-                            $expr: {
-                                $and: [
-                                    { $eq: ["$channel", "$$channel_id"] },
-                                    { $eq: ["$subscriber", new mongoose.Types.ObjectId(userId)] }
-                                ]
-                            }
-                        }
-                    }
-                ],
-                as: "isSubscribed"
-            }
-        },
-        {
+              from: "subscriptions",
+              let: { channel_id: "$_id" },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        {
+                          $eq: [
+                            "$channel",
+                            "$$channel_id",
+                          ],
+                        },
+                        {
+                          $eq: [
+                            "$subscriber",
+                            {
+                              $oid: "66501bea41e6ac56ffaa71cf",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+              as: "isSubscribed",
+            },
+          },
+          {
             $addFields: {
-                subscribersCount: { $size: "$subscribers" },
-                isSubscribed: { $gt: [{ $size: "$isSubscribed" }, 0] }
-            }
-        },
+              subscribersCount: { $size: "$subscribers" },
+              isSubscribed: {
+                $gt: [{ $size: "$isSubscribed" }, 0],
+              },
+            },
+          },
         {
             $project: {
                 fullName: 1,

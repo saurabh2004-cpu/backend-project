@@ -47,14 +47,11 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "Video",
     }],
-    playNext:{
+    playNext:[{
         type: Schema.Types.ObjectId,
         ref: "Video",
-    },
-    // Playlist:[{
-    //     type: Schema.Types.ObjectId,
-    //     ref: "Video",
-    // }]
+    }],
+    
 
 }, { timestamps: true })
 
