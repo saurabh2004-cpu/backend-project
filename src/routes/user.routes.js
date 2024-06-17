@@ -50,7 +50,7 @@ router.route("/update-account-details").patch(verifyJwt,updateAccountDetails)
 router.route("/update-avatar").patch(verifyJwt, upload.single("avatar"),updateUserAvatar)
 router.route("/update-cover-image").patch(verifyJwt,upload.single("coverImage"),updateUserCoverImage)
 
-router.route("/get-channel-profile/:channelId/:userId").get(getUserChannelProfile)
+router.route("/get-channel-profile/:channelId/:userId").get(getUserChannelProfile);
 router.route("/watch-history").get(verifyJwt,getWatchHistory)
 router.route("/create-watch-history/:videoId").post(verifyJwt,createWatchHistory)
 
