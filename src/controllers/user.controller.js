@@ -380,12 +380,12 @@ const updateUserCoverImage=asyncHandler(async(req,res)=>{
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
+    const userId = req.user?._id;
 
     if (!channelId) {
         throw new ApiError(400, "channelId is missing");
     }
 
-    const userId = req.user?._id;
 
     console.log('User ID:', userId);
     console.log('Channel ID:', channelId);
@@ -394,7 +394,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         {
             $match: {
               _id: {
-                $oid: "66655865e6a644f83de3f87d",
+                $oid: channelId,
               },
             },
           },
@@ -425,7 +425,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                           $eq: [
                             "$subscriber",
                             {
-                              $oid: "66501bea41e6ac56ffaa71cf",
+                              $oid: userId,
                             },
                           ],
                         },
