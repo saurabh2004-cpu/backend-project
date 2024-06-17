@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose"
 import {Video} from "../models/video.model.js"
 
+
 const generateAccessAndRefreshTokens=async(userId)=>{
     try {
         const user = await User.findById(userId)
@@ -381,6 +382,11 @@ const updateUserCoverImage=asyncHandler(async(req,res)=>{
 const getUserChannelProfile = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
     const {userId} = req.params;
+    const uId = mongoose.Types.ObjectId.createFromHexString(userId)
+    const chanId = mongoose.Types.ObjectId.createFromHexString(channelId)
+ 
+
+    
 
     console.log("userId",userId)
 
@@ -392,7 +398,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         const channel = await User.aggregate([
             {
                 $match: {
-                    _id: new mongoose.Types.ObjectId(channelId),
+                    _id: chanId,
                 },
             },
             {
@@ -413,7 +419,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                                 $expr: {
                                     $and: [
                                         { $eq: ["$channel", "$$channel_id"] },
-                                        { $eq: ["$subscriber", userId] },
+                                        { $eq: ["$subscriber", uId] },
                                     ],
                                 },
                             },
