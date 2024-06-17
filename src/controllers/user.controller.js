@@ -382,6 +382,8 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
     const userId = req.user?._id;
 
+    console.log(userId)
+
     if (!channelId) {
         throw new ApiError(400, "channelId is missing");
     }
