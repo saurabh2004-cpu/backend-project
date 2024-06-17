@@ -386,87 +386,69 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         throw new ApiError(400, "channelId is missing");
     }
 
-
-    console.log('User ID:', userId);
-    console.log('Channel ID:', channelId);
-
-    const channel = await User.aggregate([
-        {
-            $match: {
-              _id: {
-                $oid: channelId,
-              },
-            },
-          },
-          {
-            $lookup: {
-              from: "subscriptions",
-              localField: "_id",
-              foreignField: "channel",
-              as: "subscribers",
-            },
-          },
-          {
-            $lookup: {
-              from: "subscriptions",
-              let: { channel_id: "$_id" },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $and: [
-                        {
-                          $eq: [
-                            "$channel",
-                            "$$channel_id",
-                          ],
-                        },
-                        {
-                          $eq: [
-                            "$subscriber",
-                            {
-                              $oid: userId,
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  },
+    try {
+        const channel = await User.aggregate([
+            {
+                $match: {
+                    _id: new mongoose.Types.ObjectId(channelId),
                 },
-              ],
-              as: "isSubscribed",
             },
-          },
-          {
-            $addFields: {
-              subscribersCount: { $size: "$subscribers" },
-              isSubscribed: {
-                $gt: [{ $size: "$isSubscribed" }, 0],
-              },
+            {
+                $lookup: {
+                    from: "subscriptions",
+                    localField: "_id",
+                    foreignField: "channel",
+                    as: "subscribers",
+                },
             },
-          },
-        {
-            $project: {
-                fullName: 1,
-                username: 1,
-                subscribersCount: 1,
-                isSubscribed: 1,
-                avatar: 1,
-                coverImage: 1,
-                email: 1
-            }
+            {
+                $lookup: {
+                    from: "subscriptions",
+                    let: { channel_id: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$channel", "$$channel_id"] },
+                                        { $eq: ["$subscriber", new mongoose.Types.ObjectId(userId)] },
+                                    ],
+                                },
+                            },
+                        },
+                    ],
+                    as: "isSubscribed",
+                },
+            },
+            {
+                $addFields: {
+                    subscribersCount: { $size: "$subscribers" },
+                    isSubscribed: { $gt: [{ $size: "$isSubscribed" }, 0] },
+                },
+            },
+            {
+                $project: {
+                    fullName: 1,
+                    username: 1,
+                    subscribersCount: 1,
+                    isSubscribed: 1,
+                    avatar: 1,
+                    coverImage: 1,
+                    email: 1,
+                },
+            },
+        ]);
+
+        if (!channel?.length) {
+            throw new ApiError(404, "Channel does not exist");
         }
-    ]);
 
-    console.log('Channel Aggregate Result:', channel);
-
-    if (!channel?.length) {
-        throw new ApiError(404, "Channel does not exist");
+        return res.status(200).json(new ApiResponse(200, channel[0], "User channel fetched successfully"));
+    } catch (error) {
+        console.error('Error fetching channel:', error);
+        throw new ApiError(500, "Internal Server Error");
     }
-
-    return res.status(200).json(new ApiResponse(200, channel[0], "User channel fetched successfully"));
 });
-
 
 const createWatchHistory=asyncHandler(async(req,res)=>{
 const { videoId } = req.params;
