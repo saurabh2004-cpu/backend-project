@@ -411,7 +411,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                                 $expr: {
                                     $and: [
                                         { $eq: ["$channel", "$$channel_id"] },
-                                        { $eq: ["$subscriber", new mongoose.Types.ObjectId(userId)] },
+                                        { $eq: ["$subscriber", userId] },
                                     ],
                                 },
                             },
