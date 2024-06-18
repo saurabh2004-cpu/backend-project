@@ -46,11 +46,11 @@ app.use("/api/v1/dashbord",dashBordRouter)
 
 // Serve static files from the React app
 const __dirname = path.resolve();
-app.use(express.static(path.join(__dirname, 'build')));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Catch-all handler to serve index.html for all routes
+// Catch-all handler for any request that doesn't match API routes
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 export { app }
