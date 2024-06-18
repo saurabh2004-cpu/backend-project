@@ -277,10 +277,13 @@ const isLiked = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     const userId = req.user._id;
 
+    const uId = mongoose.Types.ObjectId.createFromHexString(userId)
+    const vidId = mongoose.Types.ObjectId.createFromHexString(videoId)
+
     const like = await Like.aggregate([
         {
             $match: {
-                video: new mongoose.Types.ObjectId(videoId)
+                video: vidId
             }
         },
         {
@@ -298,7 +301,7 @@ const isLiked = asyncHandler(async (req, res) => {
                 },
                 isLiked: {
                     $cond: {
-                        if: { $in: [userId, "$likes.likedBy"] },
+                        if: { $in: [uId, "$likes.likedBy"] },
                         then: true,
                         else: false
                     }

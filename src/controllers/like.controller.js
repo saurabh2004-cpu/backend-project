@@ -158,7 +158,47 @@ const removeFromLikedVideo=asyncHandler(async(req,res)=>{
     .json(new ApiResponse(200,removedVideo,"video removed from Liked videos "))
 })
 
+const getVideoLikesCount = asyncHandler(async (req, res) => {
+    const { videolId } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(videolId)) {
+        throw new ApiError(400, "Invalid video ID");
+    }
+
+    const videoObjectId =  new mongoose.Types.ObjectId(videoId);
+
+    const video = await User.findById(videoObjectId);
+    if (!video) {
+        throw new ApiError(404, "video not found");
+    }
+
+    const likes = await Like.aggregate([
+        { $match: { video: videoObjectId } },
+        {
+            $lookup: {
+                from: 'videos',
+                localField: 'likes',
+                foreignField: '_id',
+                as: 'likesDetails'
+            }
+        },
+        { $unwind: '$likesDetails' },   //todod know about this operator
+        {
+            $project: {
+                _id: 1,
+                likedBy: '$likesDetails._id',
+                fullName: '$likesDetails.fullName',
+                username: '$likesDetails.username',
+                avatar: '$likesDetails.avatar'
+            }
+        }
+    ]);
+
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, likes, "likes fetched successfully"));
+});
 
 export {
     toggleCommentLike,
