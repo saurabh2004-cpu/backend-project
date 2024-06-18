@@ -275,7 +275,7 @@ const incrementVideoViews=asyncHandler(async(req,res)=>{
 ////////////////////////////////////////////////////////////////
 const isLiked = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
-    const userId = req.user._id;
+    const {userId} = req.params;
 
     const uId = mongoose.Types.ObjectId.createFromHexString(userId);
     const vidId = mongoose.Types.ObjectId.createFromHexString(videoId);
