@@ -28,6 +28,8 @@ const existingVideoLike=asyncHandler(async(req,res)=>{
 const toggleVideoLike = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     const userId = req.user._id;
+
+    console.log("userId like controller",userId)
     
     const existingLike = await Like.findOne({
         video: videoId,
