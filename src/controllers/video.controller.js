@@ -316,6 +316,8 @@ const isLiked = asyncHandler(async (req, res) => {
         }
     ]);
 
+    console.log(like)
+
     if (!like?.length) {
         throw new ApiResponse(204,null ,"Like does not exist");
     }
