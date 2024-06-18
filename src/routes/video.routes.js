@@ -50,6 +50,6 @@ videoRouter.route("/increment-video-views/:videoId").post(verifyJwt,incrementVid
 videoRouter.route("/get-videos-by-catagory/:category").get(getVideosByCatagory);
 
 
-videoRouter.route("/is-liked/:videoId").get(verifyJwt, isLiked);
+videoRouter.route("/is-liked/:videoId").get( isLiked);
 
 export default videoRouter
