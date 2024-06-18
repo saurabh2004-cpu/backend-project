@@ -277,53 +277,41 @@ const isLiked = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     const userId = req.user._id;
 
-    const uId = mongoose.Types.ObjectId.createFromHexString(userId)
-    const vidId = mongoose.Types.ObjectId.createFromHexString(videoId)
+    const uId = mongoose.Types.ObjectId.createFromHexString(userId);
+    const vidId = mongoose.Types.ObjectId.createFromHexString(videoId);
 
-    const like = await Like.aggregate([
+    const likeAggregation = await Like.aggregate([
         {
             $match: {
                 video: vidId
             }
         },
         {
-            $lookup: {
-                from: "likes",
-                localField: "_id",
-                foreignField: "video",
-                as: "likes"
+            $group: {
+                _id: "$video",
+                likesCount: { $sum: 1 },
+                likedBy: { $addToSet: "$likedBy" }
             }
         },
         {
             $addFields: {
-                likesCount: {
-                    $size: "$likes"
-                },
-                isLiked: {
-                    $cond: {
-                        if: { $in: [uId, "$likes.likedBy"] },
-                        then: true,
-                        else: false
-                    }
-                }
+                isLiked: { $in: [uId, "$likedBy"] }
             }
         },
         {
             $project: {
+                _id: 0,
                 likesCount: 1,
                 isLiked: 1
             }
         }
     ]);
 
-    console.log("like",like)
+    const like = likeAggregation[0] || { likesCount: 0, isLiked: false };
 
-    if (!like?.length) {
-        throw new ApiResponse(204,null ,"Like does not exist");
-    }
-
-    return res.status(200).json(new ApiResponse(200, like[0], "User like fetched successfully"));
+    return res.status(200).json(new ApiResponse(200, like, "User like status fetched successfully"));
 });
+
 
 
 
