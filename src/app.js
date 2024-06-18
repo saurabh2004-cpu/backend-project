@@ -28,29 +28,28 @@ import dashBordRouter from './routes/dashbord.routes.js'
 //routes declaration
 app.use("/api/v1/users", userRouter) //http://localhost:800/api/v1/users/register
 
-
 app.use("/api/v1/video",videoRouter)
-
 
 app.use("/api/v1/tweet",tweetRouter)
 
-
 app.use("/api/v1/subscription",subscriptionRouter)
-
 
 app.use("/api/v1/playlist",playListRouter)
 
-
 app.use("/api/v1/like",likeRouter)
 
-
 app.use("/api/v1/comment",commentRouter)
-
-
 
 app.use("/api/v1/dashbord",dashBordRouter)
 
 
+// Serve static files from the React app
+const __dirname = path.resolve();
+app.use(express.static(path.join(__dirname, 'build')));
 
+// Catch-all handler to serve index.html for all routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 export { app }
