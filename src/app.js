@@ -5,10 +5,27 @@ import path from 'path';
 
 const app = express()
 
+const allowedOrigins = [
+  'http://localhost:5173', // Vite default development server
+  process.env.CORS_ORIGIN, // Your deployment origin, e.g., Vercel, Netlify
+];
+
+
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,    //indicates that from whre the request is accept from the frontend ex-vercel,netlify etc
-    credentials: true,
-}))
+  origin: function (origin, callback) {
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
+
+// app.use(cors({
+//     origin: process.env.CORS_ORIGIN,    //indicates that from whre the request is accept from the frontend ex-vercel,netlify etc
+//     credentials: true,
+// }))
 
 app.use(express.json({ limit: "16kb" }))                            //form data-accept the 16kb of json
 app.use(express.urlencoded({ extended: true, limit: "16kb" }))      //url data-allow nested objects,and the limit is 16kb
