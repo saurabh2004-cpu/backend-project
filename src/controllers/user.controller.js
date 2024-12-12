@@ -7,6 +7,8 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose"
 import {Video} from "../models/video.model.js"
+import {client} from "../redis/client.js"
+import { json } from "express"
 
 
 const generateAccessAndRefreshTokens=async(userId)=>{
@@ -43,7 +45,7 @@ const registerUser = asyncHandler(async(req, res) => {
 
     //1.get use detail from frontend
     const { fullName, email, username, password } = req.body
-    console.log("email :", email);
+    // console.log("email :", email);
 
     //2.validation -not empty etc 
     if ([fullName, email, username, password].some((field) => field ?.trim() === "")) 
@@ -386,16 +388,21 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     const chanId = mongoose.Types.ObjectId.createFromHexString(channelId)
  
 
-    
-
-    console.log("userId",userId)
 
     if (!channelId) {
         throw new ApiError(400, "channelId is missing");
     }
 
+    let clientChannel =  await client.smembers(`userChannelProfile${chanId}`);
+
+    if(clientChannel.length){
+        // console.log("channel from redis",clientChannel)
+        return res.json(new ApiResponse(200, clientChannel, "Channel profile fetched successfully"));
+    }
+
     try {
-        const channel = await User.aggregate([
+
+       const channel = await User.aggregate([
             {
                 $match: {
                     _id: chanId,
@@ -451,7 +458,11 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
             throw new ApiError(404, "Channel does not exist");
         }
 
-        // console.log("channel ",channel)
+        await client.sadd(`userChannelProfile${channel[0]._id}`, JSON.stringify(channel[0]));
+        client.expire(`userChannelProfile${channel[0]._id}`, 3600);
+
+        // const clientChan = await client.smembers(`userChannelProfile${channel[0]._id}`);
+        // console.log("client set:", JSON.stringify(clientChan));
 
     return res
     .status(200)
@@ -598,7 +609,7 @@ const removeFromWatchLater = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     const { videoId } = req.params;
 
-    console.log("Id",videoId)
+    // console.log("Id",videoId)
 
     const user = await User.findById(userId);
 
@@ -618,7 +629,7 @@ const AddToPlayNext = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     const userId = req.user._id;
 
-    console.log(videoId)
+    // console.log(videoId)
 
     try {
         const video = await Video.findById(videoId);
@@ -688,7 +699,9 @@ export {
     getWatchLaterVideos,
     AddToPlayNext,      //not working
     getPlayNextVideo,  //not working
-    removeFromWatchLater
+    removeFromWatchLater,
+    
+    generateAccessAndRefreshTokens
 
 
 }

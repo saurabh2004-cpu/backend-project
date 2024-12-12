@@ -2,13 +2,23 @@ import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import path from 'path';
+import passport from 'passport';
+import initializingPassport from './middlewares/passportConfig.js';
+
 
 const app = express()
+
+
+// Initialize Passport
+initializingPassport(passport);
+app.use(passport.initialize());
+
 
 const allowedOrigins = [
   'http://localhost:5173', // Vite default development server
   process.env.CORS_ORIGIN, // Your deployment origin, e.g., Vercel, Netlify
 ];
+
 
 
 app.use(cors({
@@ -63,11 +73,15 @@ app.use("/api/v1/dashbord",dashBordRouter)
 
 // Serve static files from the React app
 const __dirname = path.resolve();
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public/dist')));
 
 // Catch-all handler for any request that doesn't match API routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+
+
+
 
 export { app }

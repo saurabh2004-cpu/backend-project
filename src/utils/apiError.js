@@ -1,10 +1,5 @@
 class ApiError extends Error {             //using inheritance
-    constructor(
-        statusCode,
-        message = "something went wrong",
-        errors = [],
-        stack = ""
-    ) {
+    constructor(statusCode, message = "something went wrong", errors = [], stack = "") {
         //overwritting on error class
 
         super(message)                  //This line calls the constructor of the superclass

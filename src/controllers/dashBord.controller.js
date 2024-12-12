@@ -36,6 +36,10 @@ const getChannelVideos = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
     const { page = 1, limit = 12 } = req.query;
 
+    if (!mongoose.Types.ObjectId.isValid(channelId)) {
+        return res.status(400).json(new ApiResponse(400, null, "Invalid channel ID"));
+    }
+
     const options = {
         page: parseInt(page, 10),
         limit: parseInt(limit, 10),

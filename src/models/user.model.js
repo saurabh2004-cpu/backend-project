@@ -51,6 +51,9 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "Video",
     }],
+    googleId:{
+        type: String,
+    }
     
 
 }, { timestamps: true })
